@@ -33,10 +33,10 @@ import io.druid.data.input.impl.TimestampSpec;
 import io.druid.data.input.schemarepo.Avro1124RESTRepositoryClientWrapper;
 import io.druid.data.input.schemarepo.Avro1124SubjectAndIdConverter;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -174,13 +174,54 @@ public class AvroStreamInputRowParserTest
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     out.write(byteBuffer.array());
     // encode data
-    DatumWriter<GenericRecord> writer = new GenericDatumWriter<GenericRecord>(someAvroDatum.getSchema());
+    DatumWriter<GenericRecord> writer = new SpecificDatumWriter<>(someAvroDatum.getSchema());
     // write avro datum to bytes
     writer.write(someAvroDatum, EncoderFactory.get().directBinaryEncoder(out, null));
 
     InputRow inputRow = parser2.parse(ByteBuffer.wrap(out.toByteArray()));
 
-    assertInputRowCorrect(inputRow);
+    assertInputRowCorrect(inputRow, DIMENSIONS);
+  }
+
+  @Test
+  public void testParseSchemaless() throws SchemaValidationException, IOException
+  {
+    // serde test
+    Repository repository = new InMemoryRepository(null);
+    AvroStreamInputRowParser parser = new AvroStreamInputRowParser(
+        PARSE_SPEC_SCHEMALESS,
+        new SchemaRepoBasedAvroBytesDecoder<String, Integer>(new Avro1124SubjectAndIdConverter(TOPIC), repository)
+    );
+    ByteBufferInputRowParser parser2 = jsonMapper.readValue(
+        jsonMapper.writeValueAsString(parser),
+        ByteBufferInputRowParser.class
+    );
+    repository = ((SchemaRepoBasedAvroBytesDecoder) ((AvroStreamInputRowParser) parser2).getAvroBytesDecoder()).getSchemaRepository();
+
+    // prepare data
+    GenericRecord someAvroDatum = buildSomeAvroDatum();
+
+    // encode schema id
+    Avro1124SubjectAndIdConverter converter = new Avro1124SubjectAndIdConverter(TOPIC);
+    TypedSchemaRepository<Integer, Schema, String> repositoryClient = new TypedSchemaRepository<Integer, Schema, String>(
+        repository,
+        new IntegerConverter(),
+        new AvroSchemaConverter(),
+        new IdentityConverter()
+    );
+    Integer id = repositoryClient.registerSchema(TOPIC, SomeAvroDatum.getClassSchema());
+    ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+    converter.putSubjectAndId(TOPIC, id, byteBuffer);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    out.write(byteBuffer.array());
+    // encode data
+    DatumWriter<GenericRecord> writer = new SpecificDatumWriter<>(someAvroDatum.getSchema());
+    // write avro datum to bytes
+    writer.write(someAvroDatum, EncoderFactory.get().directBinaryEncoder(out, null));
+
+    InputRow inputRow = parser2.parse(ByteBuffer.wrap(out.toByteArray()));
+
+    assertInputRowCorrect(inputRow, DIMENSIONS_SCHEMALESS);
   }
 
   public static void assertInputRowCorrect(InputRow inputRow)
@@ -244,29 +285,27 @@ public class AvroStreamInputRowParserTest
     assertEquals(SOME_INT_VALUE, inputRow.getLongMetric("someInt"));
   }
 
-  public static GenericRecord buildSomeAvroDatum() throws IOException
+  public static SomeAvroDatum buildSomeAvroDatum() throws IOException
   {
-    SomeAvroDatum datum = SomeAvroDatum.newBuilder()
-                                       .setTimestamp(DATE_TIME.getMillis())
-                                       .setEventType(EVENT_TYPE_VALUE)
-                                       .setId(ID_VALUE)
-                                       .setSomeOtherId(SOME_OTHER_ID_VALUE)
-                                       .setIsValid(true)
-                                       .setSomeFloat(SOME_FLOAT_VALUE)
-                                       .setSomeInt(SOME_INT_VALUE)
-                                       .setSomeLong(SOME_LONG_VALUE)
-                                       .setSomeIntArray(SOME_INT_ARRAY_VALUE)
-                                       .setSomeStringArray(SOME_STRING_ARRAY_VALUE)
-                                       .setSomeIntValueMap(SOME_INT_VALUE_MAP_VALUE)
-                                       .setSomeStringValueMap(SOME_STRING_VALUE_MAP_VALUE)
-                                       .setSomeUnion(SOME_UNION_VALUE)
-                                       .setSomeFixed(SOME_FIXED_VALUE)
-                                       .setSomeBytes(SOME_BYTES_VALUE)
-                                       .setSomeNull(null)
-                                       .setSomeEnum(MyEnum.ENUM1)
-                                       .setSomeRecord(SOME_RECORD_VALUE)
-                                       .build();
-
-    return datum;
+    return SomeAvroDatum.newBuilder()
+                                   .setTimestamp(DATE_TIME.getMillis())
+                                   .setEventType(EVENT_TYPE_VALUE)
+                                   .setId(ID_VALUE)
+                                   .setSomeOtherId(SOME_OTHER_ID_VALUE)
+                                   .setIsValid(true)
+                                   .setSomeFloat(SOME_FLOAT_VALUE)
+                                   .setSomeInt(SOME_INT_VALUE)
+                                   .setSomeLong(SOME_LONG_VALUE)
+                                   .setSomeIntArray(SOME_INT_ARRAY_VALUE)
+                                   .setSomeStringArray(SOME_STRING_ARRAY_VALUE)
+                                   .setSomeIntValueMap(SOME_INT_VALUE_MAP_VALUE)
+                                   .setSomeStringValueMap(SOME_STRING_VALUE_MAP_VALUE)
+                                   .setSomeUnion(SOME_UNION_VALUE)
+                                   .setSomeFixed(SOME_FIXED_VALUE)
+                                   .setSomeBytes(SOME_BYTES_VALUE)
+                                   .setSomeNull(null)
+                                   .setSomeEnum(MyEnum.ENUM1)
+                                   .setSomeRecord(SOME_RECORD_VALUE)
+                                   .build();
   }
 }
