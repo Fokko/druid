@@ -1030,6 +1030,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <excludeFilterFile>dev/spotbugs-exclude.xml</excludeFilterFile>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
