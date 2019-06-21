@@ -137,10 +137,6 @@
             <artifactId>jetty-proxy</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.tesla.aether</groupId>
             <artifactId>tesla-aether</artifactId>
         </dependency>

@@ -209,10 +209,6 @@
 
     <!-- Extra dependencies for emitter -->
     <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-    </dependency>
-    <dependency>
       <groupId>net.java.dev.jna</groupId>
       <artifactId>jna</artifactId>
     </dependency>
