@@ -283,19 +283,14 @@ public class HttpServerInventoryView implements ServerInventoryView, FilteredSer
   {
     for (final Map.Entry<SegmentCallback, Executor> entry : segmentCallbacks.entrySet()) {
       entry.getValue().execute(
-          new Runnable()
-          {
-            @Override
-            public void run()
-            {
-              if (CallbackAction.UNREGISTER == fn.apply(entry.getKey())) {
-                segmentCallbacks.remove(entry.getKey());
-                if (segmentPredicates.remove(entry.getKey()) != null) {
-                  finalPredicate = Predicates.or(
-                      defaultFilter,
-                      Predicates.or(segmentPredicates.values())
-                  );
-                }
+          () -> {
+            if (CallbackAction.UNREGISTER == fn.apply(entry.getKey())) {
+              segmentCallbacks.remove(entry.getKey());
+              if (segmentPredicates.remove(entry.getKey()) != null) {
+                finalPredicate = Predicates.or(
+                    defaultFilter,
+                    Predicates.or(segmentPredicates.values())
+                );
               }
             }
           }
@@ -307,14 +302,9 @@ public class HttpServerInventoryView implements ServerInventoryView, FilteredSer
   {
     for (final Map.Entry<ServerRemovedCallback, Executor> entry : serverCallbacks.entrySet()) {
       entry.getValue().execute(
-          new Runnable()
-          {
-            @Override
-            public void run()
-            {
-              if (CallbackAction.UNREGISTER == entry.getKey().serverRemoved(server)) {
-                serverCallbacks.remove(entry.getKey());
-              }
+          () -> {
+            if (CallbackAction.UNREGISTER == entry.getKey().serverRemoved(server)) {
+              serverCallbacks.remove(entry.getKey());
             }
           }
       );
@@ -365,25 +355,15 @@ public class HttpServerInventoryView implements ServerInventoryView, FilteredSer
 
     log.info("Calling SegmentCallback.segmentViewInitialized() for all callbacks.");
 
-    runSegmentCallbacks(
-        new Function<SegmentCallback, CallbackAction>()
-        {
-          @Override
-          public CallbackAction apply(SegmentCallback input)
-          {
-            return input.segmentViewInitialized();
-          }
-        }
-    );
+    runSegmentCallbacks(SegmentCallback::segmentViewInitialized);
   }
 
   private void serverAdded(DruidServer server)
   {
     synchronized (servers) {
-      DruidServerHolder holder = servers.get(server.getName());
-      if (holder == null) {
+      if (!servers.containsKey(server.getName())) {
         log.info("Server[%s] appeared.", server.getName());
-        holder = new DruidServerHolder(server);
+        final DruidServerHolder holder = new DruidServerHolder(server);
         servers.put(server.getName(), holder);
         holder.start();
       } else {
@@ -593,14 +573,7 @@ public class HttpServerInventoryView implements ServerInventoryView, FilteredSer
         if (druidServer.getSegment(segment.getId()) == null) {
           druidServer.addDataSegment(segment);
           runSegmentCallbacks(
-              new Function<SegmentCallback, CallbackAction>()
-              {
-                @Override
-                public CallbackAction apply(SegmentCallback input)
-                {
-                  return input.segmentAdded(druidServer.getMetadata(), segment);
-                }
-              }
+              input -> input.segmentAdded(druidServer.getMetadata(), segment)
           );
         } else {
           log.warn(
@@ -616,14 +589,7 @@ public class HttpServerInventoryView implements ServerInventoryView, FilteredSer
     {
       if (druidServer.removeDataSegment(segment.getId()) != null) {
         runSegmentCallbacks(
-            new Function<SegmentCallback, CallbackAction>()
-            {
-              @Override
-              public CallbackAction apply(SegmentCallback input)
-              {
-                return input.segmentRemoved(druidServer.getMetadata(), segment);
-              }
-            }
+            input -> input.segmentRemoved(druidServer.getMetadata(), segment)
         );
       } else {
         log.warn(

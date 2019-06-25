@@ -28,7 +28,6 @@
   Reference: https://github.com/apache/incubator-druid/pull/7894/files
 -->
 <FindBugsFilter>
-    <Bug pattern="AT_OPERATION_SEQUENCE_ON_CONCURRENT_ABSTRACTION"/>
     <Bug pattern="BC_IMPOSSIBLE_INSTANCEOF"/>
     <Bug pattern="BC_UNCONFIRMED_CAST"/>
     <Bug pattern="BIT_SIGNED_CHECK_HIGH_BIT"/>
