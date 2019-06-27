@@ -276,9 +276,7 @@ public class RealtimeManager implements QuerySegmentWalker
     {
       initPlumber();
 
-      try {
-        final Closer closer = Closer.create();
-
+      try (Closer closer = Closer.create()) {
         try {
           Object metadata = plumber.startJob();
 
@@ -312,9 +310,6 @@ public class RealtimeManager implements QuerySegmentWalker
           log.makeAlert(e, "Error aborted realtime processing[%s]", fireDepartment.getDataSchema().getDataSource())
              .emit();
           throw closer.rethrow(e);
-        }
-        finally {
-          closer.close();
         }
       }
       catch (IOException e) {
@@ -370,7 +365,7 @@ public class RealtimeManager implements QuerySegmentWalker
       return true;
     }
 
-    private boolean runFirehose(Firehose firehose)
+    private boolean runFirehose(Firehose firehose) throws IOException
     {
       final Supplier<Committer> committerSupplier = Committers.supplierFromFirehose(firehose);
       while (firehose.hasMore()) {

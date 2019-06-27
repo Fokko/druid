@@ -62,7 +62,7 @@ public class FileIteratingFirehose implements Firehose
   }
 
   @Override
-  public boolean hasMore()
+  public boolean hasMore() throws IOException
   {
     while ((lineIterator == null || !lineIterator.hasNext()) && lineIterators.hasNext()) {
       lineIterator = getNextLineIterator();
@@ -73,7 +73,7 @@ public class FileIteratingFirehose implements Firehose
 
   @Nullable
   @Override
-  public InputRow nextRow()
+  public InputRow nextRow() throws IOException
   {
     if (!hasMore()) {
       throw new NoSuchElementException();
@@ -83,7 +83,7 @@ public class FileIteratingFirehose implements Firehose
   }
 
   @Override
-  public InputRowPlusRaw nextRowWithRaw()
+  public InputRowPlusRaw nextRowWithRaw() throws IOException
   {
     if (!hasMore()) {
       throw new NoSuchElementException();
@@ -98,7 +98,7 @@ public class FileIteratingFirehose implements Firehose
     }
   }
 
-  private LineIterator getNextLineIterator()
+  private LineIterator getNextLineIterator() throws IOException
   {
     if (lineIterator != null) {
       lineIterator.close();
