@@ -88,20 +88,22 @@ public class InlineSchemasAvroBytesDecoderTest
   @Test
   public void testParse() throws Exception
   {
+    int id = 10;
+
     GenericRecord someAvroDatum = AvroStreamInputRowParserTest.buildSomeAvroDatum();
     Schema schema = SomeAvroDatum.getClassSchema();
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
 
     out.write(new byte[]{1});
-    out.write(ByteBuffer.allocate(4).putInt(10).array());
+    out.write(ByteBuffer.allocate(4).putInt(id).array());
     DatumWriter<GenericRecord> writer = new SpecificDatumWriter<>(schema);
     writer.write(someAvroDatum, EncoderFactory.get().directBinaryEncoder(out, null));
 
     GenericRecord actual = new InlineSchemasAvroBytesDecoder(
         new ObjectMapper(),
         ImmutableMap.of(
-            "schema",
+            Integer.toString(id),
             ImmutableMap.of(
                 "10",
                 schema
