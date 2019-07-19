@@ -99,9 +99,13 @@ public class InlineSchemasAvroBytesDecoderTest
     writer.write(someAvroDatum, EncoderFactory.get().directBinaryEncoder(out, null));
 
     GenericRecord actual = new InlineSchemasAvroBytesDecoder(
+        new ObjectMapper(),
         ImmutableMap.of(
-            10,
-            schema
+            "schema",
+            ImmutableMap.of(
+                "10",
+                schema
+            )
         )
     ).parse(ByteBuffer.wrap(out.toByteArray()));
     Assert.assertEquals(someAvroDatum.get("id"), actual.get("id"));

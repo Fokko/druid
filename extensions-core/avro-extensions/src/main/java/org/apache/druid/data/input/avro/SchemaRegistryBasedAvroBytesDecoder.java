@@ -31,17 +31,20 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
+import javax.annotation.Nullable;
+
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
 public class SchemaRegistryBasedAvroBytesDecoder implements AvroBytesDecoder
 {
+  @Nullable
   private final SchemaRegistryClient registry;
 
   @JsonCreator
   public SchemaRegistryBasedAvroBytesDecoder(
       @JsonProperty("url") String url,
-      @JsonProperty("capacity") Integer capacity
+      @JsonProperty("capacity") @Nullable Integer capacity
   )
   {
     int identityMapCapacity = capacity == null ? Integer.MAX_VALUE : capacity;

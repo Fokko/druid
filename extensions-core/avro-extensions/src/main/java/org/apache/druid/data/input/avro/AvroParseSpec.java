@@ -28,13 +28,15 @@ import org.apache.druid.data.input.impl.TimestampSpec;
 import org.apache.druid.java.util.common.parsers.JSONPathSpec;
 import org.apache.druid.java.util.common.parsers.Parser;
 
+import javax.annotation.Nullable;
+
 public class AvroParseSpec extends NestedDataParseSpec<JSONPathSpec>
 {
   @JsonCreator
   public AvroParseSpec(
-      @JsonProperty("timestampSpec") TimestampSpec timestampSpec,
-      @JsonProperty("dimensionsSpec") DimensionsSpec dimensionsSpec,
-      @JsonProperty("flattenSpec") JSONPathSpec flattenSpec
+      @JsonProperty("timestampSpec") @Nullable TimestampSpec timestampSpec,
+      @JsonProperty("dimensionsSpec") @Nullable DimensionsSpec dimensionsSpec,
+      @JsonProperty("flattenSpec") @Nullable JSONPathSpec flattenSpec
   )
   {
     super(

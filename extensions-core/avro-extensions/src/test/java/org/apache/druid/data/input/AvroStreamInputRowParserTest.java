@@ -297,14 +297,9 @@ public class AvroStreamInputRowParserTest
                     .on(",")
                     .withKeyValueSeparator("=")
                     .split(BRACES_AND_SPACE.matcher(inputRow.getDimension("someIntValueMap").get(0)).replaceAll("")),
-                new Function<String, Integer>()
-                {
-                  @Nullable
-                  @Override
-                  public Integer apply(@Nullable String input)
-                  {
-                    return Integer.valueOf(input);
-                  }
+                input -> {
+                  assert input != null;
+                  return Integer.valueOf(input);
                 }
             )
         )

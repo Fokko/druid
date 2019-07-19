@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
@@ -34,6 +33,8 @@ import org.apache.avro.util.ByteBufferInputStream;
 import org.apache.druid.guice.annotations.Json;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.common.parsers.ParseException;
+
+import javax.annotation.Nullable;
 
 import java.io.EOFException;
 import java.nio.ByteBuffer;
@@ -55,7 +56,7 @@ public class InlineSchemasAvroBytesDecoder implements AvroBytesDecoder
   @JsonCreator
   public InlineSchemasAvroBytesDecoder(
       @JacksonInject @Json ObjectMapper mapper,
-      @JsonProperty("schemas") Map<String, Map<String, Object>> schemas
+      @JsonProperty("schemas") @Nullable Map<String, Map<String, Object>> schemas
   ) throws Exception
   {
     Preconditions.checkArgument(
@@ -64,8 +65,7 @@ public class InlineSchemasAvroBytesDecoder implements AvroBytesDecoder
     );
 
     this.schemas = schemas;
-
-    schemaObjs = new HashMap<>(schemas.size());
+    this.schemaObjs = new HashMap<>(schemas.size());
     for (Map.Entry<String, Map<String, Object>> e : schemas.entrySet()) {
 
       int id = Integer.parseInt(e.getKey());
@@ -74,17 +74,8 @@ public class InlineSchemasAvroBytesDecoder implements AvroBytesDecoder
       String schemaStr = mapper.writeValueAsString(schema);
 
       LOGGER.debug("Schema string [%s] = [%s]", id, schemaStr);
-      schemaObjs.put(id, new Schema.Parser().parse(schemaStr));
+      this.schemaObjs.put(id, new Schema.Parser().parse(schemaStr));
     }
-  }
-
-  @VisibleForTesting
-  public InlineSchemasAvroBytesDecoder(
-      Map<Integer, Schema> schemaObjs
-  )
-  {
-    this.schemaObjs = schemaObjs;
-    this.schemas = null;
   }
 
   @JsonProperty

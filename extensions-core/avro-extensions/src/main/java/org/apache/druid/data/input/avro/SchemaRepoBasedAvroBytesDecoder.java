@@ -34,6 +34,8 @@ import org.schemarepo.Repository;
 import org.schemarepo.api.TypedSchemaRepository;
 import org.schemarepo.api.converter.AvroSchemaConverter;
 
+import javax.annotation.Nullable;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -44,12 +46,13 @@ public class SchemaRepoBasedAvroBytesDecoder<SUBJECT, ID> implements AvroBytesDe
 {
   private final TypedSchemaRepository<ID, Schema, SUBJECT> typedRepository;
   private final SubjectAndIdConverter<SUBJECT, ID> subjectAndIdConverter;
+  @Nullable
   private final Repository schemaRepository;
 
   @JsonCreator
   public SchemaRepoBasedAvroBytesDecoder(
       @JsonProperty("subjectAndIdConverter") SubjectAndIdConverter<SUBJECT, ID> subjectAndIdConverter,
-      @JsonProperty("schemaRepository") Repository schemaRepository
+      @JsonProperty("schemaRepository") @Nullable Repository schemaRepository
   )
   {
     this.subjectAndIdConverter = subjectAndIdConverter;
@@ -63,6 +66,7 @@ public class SchemaRepoBasedAvroBytesDecoder<SUBJECT, ID> implements AvroBytesDe
   }
 
   @JsonProperty
+  @Nullable
   public Repository getSchemaRepository()
   {
     return schemaRepository;
@@ -117,7 +121,7 @@ public class SchemaRepoBasedAvroBytesDecoder<SUBJECT, ID> implements AvroBytesDe
   @Override
   public int hashCode()
   {
-    int result = subjectAndIdConverter != null ? subjectAndIdConverter.hashCode() : 0;
+    int result = subjectAndIdConverter.hashCode();
     result = 31 * result + (schemaRepository != null ? schemaRepository.hashCode() : 0);
     return result;
   }

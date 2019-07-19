@@ -35,6 +35,8 @@ import org.apache.druid.guice.annotations.Json;
 import org.apache.druid.java.util.common.logger.Logger;
 import org.apache.druid.java.util.common.parsers.ParseException;
 
+import javax.annotation.Nullable;
+
 import java.io.EOFException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
@@ -46,6 +48,7 @@ public class InlineSchemaAvroBytesDecoder implements AvroBytesDecoder
 {
   private static final Logger LOGGER = new Logger(InlineSchemaAvroBytesDecoder.class);
 
+  @Nullable
   private final Schema schemaObj;
   private final Map<String, Object> schema;
   private final DatumReader<GenericRecord> reader;
